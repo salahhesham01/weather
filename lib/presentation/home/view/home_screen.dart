@@ -126,8 +126,9 @@ class _HomeScreenState extends State<HomeScreen> {
                           width: 300,
                           decoration: BoxDecoration(
                             image: DecorationImage(
-                              image: NetworkImage(
-                                  'https://openweathermap.org/img/wn/${homeController.weatherData.weather?[0].icon}@2x.png'),
+                              image: AssetImage(homeController.getWeatherIcon(
+                                  weatherCode: homeController
+                                      .weatherData.weather![0].id)),
                             ),
                           ),
                         ),
