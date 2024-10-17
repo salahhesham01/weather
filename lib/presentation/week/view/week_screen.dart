@@ -8,8 +8,8 @@ import '../../home/controller/home_controller.dart';
 class WeekScreen extends StatelessWidget {
   WeekScreen({super.key});
   WeekController weekController = Get.put(WeekController());
-  HomeController homeController = Get.put(HomeController());
-  String selectedUnit = Get.arguments;
+  final String selectedUnit = Get.arguments;
+  HomeController homeController = Get.find();
 
   @override
   Widget build(BuildContext context) {
@@ -19,7 +19,21 @@ class WeekScreen extends StatelessWidget {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return Scaffold(
               body: Center(
-                child: CircularProgressIndicator(),
+                child: Container(
+                  height: context.height,
+                  width: context.width,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        const Color(0xFFFFA500),
+                        const Color(0xFF8A2BE2).withOpacity(0.7),
+                        const Color(0xFF000000),
+                      ],
+                    ),
+                  ),
+                ),
               ),
             );
           } else if (snapshot.hasError) {
@@ -85,14 +99,16 @@ class WeekScreen extends StatelessWidget {
                             ],
                           ),
                           Container(
-                            height: 50.0,
-                            width: 50.0,
-                            decoration: const BoxDecoration(
-                              image: DecorationImage(
-                                  image: NetworkImage(
-                                      'https://openweathermap.org/img/wn/10d@2x.png')),
-                            ),
-                          )
+                              height: 50.0,
+                              width: 50.0,
+                              decoration: BoxDecoration(
+                                image: DecorationImage(
+                                  image: AssetImage(
+                                      homeController.getWeatherIcon(
+                                          weatherCode: homeController
+                                              .weatherData.weather![0].id)),
+                                ),
+                              ))
                         ],
                       ),
 
@@ -162,7 +178,7 @@ class WeekScreen extends StatelessWidget {
                                     ),
 
                                     Text(
-                                      //day temp
+                                      //day temp with selected unit
                                       '${homeController.getHourTemperature(weekController.weekHourWeatherData.daily?.temperature_2mMax[index], selectedUnit)}',
                                       style: GoogleFonts.openSans(
                                         fontSize: 45.0,

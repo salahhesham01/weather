@@ -1,26 +1,51 @@
 import 'dart:convert';
 
+import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:weather/presentation/week/model/week_model.dart';
 
-import '../../../config/app_routes.dart';
 import 'package:http/http.dart' as http;
+
+import '../../../services/loction.dart';
 
 class WeekController extends GetxController {
   WeekData weekHourWeatherData = WeekData();
+  RxString selectedUnit = ''.obs; // RxString for reactivity
+
+  @override
+  void onInit() {
+    super.onInit();
+    // Ensure you're receiving the string value
+    selectedUnit.value =
+        Get.arguments ?? 'Celsius'; // Fallback to Celsius if no argument
+  }
+
+  dynamic lat;
+  dynamic lon;
+  Future<void> fetchData() async {
+    try {
+      Position position = await getFormattedPosition();
+      lat = position.latitude.toDouble();
+      lon = position.longitude.toDouble();
+      print("lat =$lat ,lon= $lon");
+    } catch (e) {
+      print(e);
+    }
+  }
 
   void homeNav() {
-    Get.offAllNamed(AppRoutes.home);
+    Get.back(result: selectedUnit.value); // Return the actual string value
   }
 
   Future getWeatherWeekData() async {
     try {
+      await fetchData();
       // print("$lat : $lon");
       var request = http.Request(
         'GET',
         Uri.parse(
-            'https://api.open-meteo.com/v1/forecast?current=&daily=temperature_2m_max&temperature_unit=fahrenheit&timezone=auto&latitude=29.9008&longitude=31.171794'),
+            'https://api.open-meteo.com/v1/forecast?current=&daily=temperature_2m_max&temperature_unit=fahrenheit&timezone=auto&latitude=${lat}&longitude=${lon}'),
       );
 
       http.StreamedResponse response = await request.send();
@@ -46,11 +71,8 @@ class WeekController extends GetxController {
   String getDayName(String? dateString) {
     if (dateString == null) return '';
 
-    // Parse the string to a DateTime object
     DateTime date = DateTime.parse(dateString);
 
-    // Get the day name using DateFormat
-    return DateFormat('EEEE')
-        .format(date); // EEEE gives full day name, E for short
+    return DateFormat('EEEE').format(date);
   }
 }

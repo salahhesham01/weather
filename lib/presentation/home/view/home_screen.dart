@@ -6,14 +6,9 @@ import 'package:weather/presentation/home/controller/home_controller.dart';
 
 import '../../../widget/gradientText.dart';
 
-class HomeScreen extends StatefulWidget {
+class HomeScreen extends StatelessWidget {
   HomeScreen({super.key});
 
-  @override
-  State<HomeScreen> createState() => _HomeScreenState();
-}
-
-class _HomeScreenState extends State<HomeScreen> {
   HomeController homeController = Get.put(HomeController());
 
   String selectedUnit = 'Celsius';
@@ -26,7 +21,21 @@ class _HomeScreenState extends State<HomeScreen> {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return Scaffold(
               body: Center(
-                child: CircularProgressIndicator(),
+                child: Container(
+                  height: context.height,
+                  width: context.width,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        const Color(0xFFFFA500),
+                        const Color(0xFF8A2BE2).withOpacity(0.7),
+                        const Color(0xFF000000),
+                      ],
+                    ),
+                  ),
+                ),
               ),
             );
           } else if (snapshot.hasError) {
@@ -35,20 +44,25 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: Text(snapshot.error.toString()),
               ),
             );
+          } else if (!snapshot.hasData || snapshot.data == null) {
+            return Text(
+                "No data available"); // Handle the case where no data is available
           } else {
             return Scaffold(
               body: Container(
                 height: context.height,
                 width: context.width,
                 decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
                       const Color(0xFFFFA500),
                       const Color(0xFF8A2BE2).withOpacity(0.7),
                       const Color(0xFF000000),
-                    ])),
+                    ],
+                  ),
+                ),
                 child: Padding(
                   padding:
                       const EdgeInsets.only(top: 60.0, left: 16.0, right: 16.0),
@@ -60,18 +74,19 @@ class _HomeScreenState extends State<HomeScreen> {
                         children: [
                           RichText(
                             text: TextSpan(
-                                style: GoogleFonts.openSans(height: 1.1),
-                                children: <TextSpan>[
-                                  //time
-                                  TextSpan(
-                                    text: "GMT",
-                                    style: TextStyle(
-                                        fontSize: 14.0,
-                                        fontWeight: FontWeight.bold,
-                                        color: const Color(0xFFFFFFFF)
-                                            .withOpacity(0.7)),
+                              style: GoogleFonts.openSans(height: 1.1),
+                              children: <TextSpan>[
+                                TextSpan(
+                                  text: "GMT",
+                                  style: TextStyle(
+                                    fontSize: 14.0,
+                                    fontWeight: FontWeight.bold,
+                                    color: const Color(0xFFFFFFFF)
+                                        .withOpacity(0.7),
                                   ),
-                                ]),
+                                ),
+                              ],
+                            ),
                           ),
                           PopupMenuButton<String>(
                             icon: Icon(
@@ -80,9 +95,8 @@ class _HomeScreenState extends State<HomeScreen> {
                               size: 30.0,
                             ),
                             onSelected: (String result) {
-                              setState(() {
-                                selectedUnit = result;
-                              });
+                              homeController.changeUnit(
+                                  result); // Update unit dynamically
                             },
                             itemBuilder: (BuildContext context) => [
                               const PopupMenuItem(
@@ -95,11 +109,9 @@ class _HomeScreenState extends State<HomeScreen> {
                               ),
                             ],
                           ),
-
-                          // icon of weather
                           GestureDetector(
                             onTap: () {
-                              homeController.weekNav(selectedUnit);
+                              homeController.weekNav();
                             },
                             child: Container(
                               padding: const EdgeInsets.all(2.0),
@@ -135,44 +147,43 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                       Padding(
                         padding: const EdgeInsets.only(top: 16.0),
-                        child: RichText(
-                          textAlign: TextAlign.center,
-                          text: TextSpan(
-                            style: GoogleFonts.openSans(height: 1.2),
-                            children: <TextSpan>[
-                              //temperature
-                              TextSpan(
-                                text:
-                                    "${homeController.getTemperature(homeController.weatherData.main?.temp, selectedUnit)}\n",
-                                style: TextStyle(
-                                    fontSize: 75.0,
-                                    fontWeight: FontWeight.bold,
-                                    color: Color(0xFFFFFFFF)),
-                              ),
+                        child: Obx(() => RichText(
+                              textAlign: TextAlign.center,
+                              text: TextSpan(
+                                style: GoogleFonts.openSans(height: 1.2),
+                                children: <TextSpan>[
+                                  //temperature
+                                  TextSpan(
+                                    text:
+                                        "${homeController.getTemperature(homeController.weatherData.main?.temp, homeController.selectedUnit.value)}\n",
+                                    style: TextStyle(
+                                        fontSize: 75.0,
+                                        fontWeight: FontWeight.bold,
+                                        color: Color(0xFFFFFFFF)),
+                                  ),
 
-                              // humidity
-
-                              TextSpan(
-                                text:
-                                    '${homeController.weatherData.main?.humidity} % \n',
-                                style: TextStyle(
-                                    fontSize: 20.0,
-                                    fontWeight: FontWeight.bold,
-                                    color: Color(0xFFFFFFFF)),
+                                  // humidity
+                                  TextSpan(
+                                    text:
+                                        '${homeController.weatherData.main?.humidity} % \n',
+                                    style: TextStyle(
+                                        fontSize: 20.0,
+                                        fontWeight: FontWeight.bold,
+                                        color: Color(0xFFFFFFFF)),
+                                  ),
+                                  // date and time
+                                  TextSpan(
+                                    text:
+                                        '${homeController.getFormattedDate(homeController.weatherData.dt!)}.\n',
+                                    style: TextStyle(
+                                        fontSize: 13.0,
+                                        fontWeight: FontWeight.bold,
+                                        color: const Color(0xFFFFFFFF)
+                                            .withOpacity(0.7)),
+                                  ),
+                                ],
                               ),
-                              // date and time
-                              TextSpan(
-                                text:
-                                    '${homeController.getFormattedDate(homeController.weatherData.dt!)}.\n',
-                                style: TextStyle(
-                                    fontSize: 13.0,
-                                    fontWeight: FontWeight.bold,
-                                    color: const Color(0xFFFFFFFF)
-                                        .withOpacity(0.7)),
-                              ),
-                            ],
-                          ),
-                        ),
+                            )),
                       ),
                       // hourly forecast
                       Padding(
@@ -252,14 +263,14 @@ class _HomeScreenState extends State<HomeScreen> {
                                       ),
                                     ],
                                   ),
-                                  Text(
-                                    '${homeController.getHourTemperature(homeController.hourData.hourly!.temperature_2m[start], selectedUnit)}', // Display the temperature
-                                    style: GoogleFonts.openSans(
-                                      fontSize: 45.0,
-                                      color: const Color(0xFFFFFFFF)
-                                          .withOpacity(0.7),
-                                    ),
-                                  ),
+                                  Obx(() => Text(
+                                        '${homeController.getHourTemperature(homeController.hourData.hourly!.temperature_2m[start], homeController.selectedUnit.value)}', // Display the temperature with the updated unit
+                                        style: GoogleFonts.openSans(
+                                          fontSize: 45.0,
+                                          color: const Color(0xFFFFFFFF)
+                                              .withOpacity(0.7),
+                                        ),
+                                      )),
                                 ],
                               ),
                             );
